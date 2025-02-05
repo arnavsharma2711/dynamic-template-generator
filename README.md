@@ -26,7 +26,8 @@ Follow these steps to get up and running with the app:
 1. **Clone the Repository**:
 
    ```bash
-   git clone https://github.com/arnavsharma/template-generator.git
+   git clone https://github.com/arnavsharma2711/dynamic-template-generator
+   cd dynamic-template-generator
    ```
 
 2. **Install Dependencies**:
@@ -44,6 +45,26 @@ Follow these steps to get up and running with the app:
 4. **Access the App**:  
    Open [http://localhost:3000](http://localhost:3000) in your browser to start using the application.
 
+## 📸 Screenshots
+
+Explore the various features of the **Dynamic Template Generator**:
+
+1. **Homepage**  
+   ![Homepage](/screenshots/homepage.webp)
+   The main landing page of the app, showcasing the core features and navigation options.
+
+2. **Template Form**
+   ![Template Form](/screenshots/template-form.webp)
+   A detailed view of the form where users can create new templates, including customizable fields and options.
+
+3. **Template List**  
+   ![Template List](/screenshots/template-list.webp)
+   A view of all saved templates, with options to edit or delete them.
+
+4. **Template Generator**  
+   ![Template Generator](/screenshots/template-generator.webp)
+   The tool that allows users to generate dynamic content based on selected templates and input data.
+
 ## 🛠️ Upcoming Features
 
 - **Database Integration**: Store and retrieve templates from a database for better scalability.
@@ -54,7 +75,7 @@ Follow these steps to get up and running with the app:
 
 ## 🤝 Contributing
 
-We welcome contributions! If you spot a bug, have suggestions, or want to contribute to new features, feel free to open an issue or submit a pull request on the [GitHub repository](https://github.com/arnavsharma/template-generator).
+We welcome contributions! If you spot a bug, have suggestions, or want to contribute to new features, feel free to open an issue or submit a pull request on the [GitHub repository](https://github.com/arnavsharma2711/dynamic-template-generator).
 
 ## 👨‍💻 Author
 
