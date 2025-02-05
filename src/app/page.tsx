@@ -1,101 +1,183 @@
-import Image from "next/image";
+// app/page.tsx
+'use client';
+
+import { TemplateForm } from '@/components/TemplateForm';
+import { TemplateGenerator } from '@/components/TemplateGenerator';
+import { TemplateList } from '@/components/TemplateList';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [templates, setTemplates] = useState<Array<{ name: string; message: string }>>([]);
+  const [templateName, setTemplateName] = useState('');
+  const [templateMessage, setTemplateMessage] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [inputValues, setInputValues] = useState<Record<string, string>>({});
+  const [generatedOutput, setGeneratedOutput] = useState('');
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editMessage, setEditMessage] = useState('');
+  const [isCopied, setIsCopied] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    const storedTemplates = JSON.parse(localStorage.getItem('templates') || '[]');
+    setTemplates(storedTemplates);
+  }, []);
+
+  const saveTemplate = () => {
+    if (!templateName || !templateMessage) {
+      alert("Please fill in both fields.");
+      return;
+    }
+
+    const newTemplates = [...templates, { name: templateName, message: templateMessage }];
+    setTemplates(newTemplates);
+    localStorage.setItem('templates', JSON.stringify(newTemplates));
+    setTemplateName('');
+    setTemplateMessage('');
+  };
+
+  const startEditing = (index: number) => {
+    setEditingIndex(index);
+    setEditName(templates[index].name);
+    setEditMessage(templates[index].message);
+  };
+
+  const cancelEditing = () => {
+    setEditingIndex(null);
+    setEditName('');
+    setEditMessage('');
+  };
+
+  const saveEdit = (index: number) => {
+    if (!editName || !editMessage) {
+      alert("Please fill in both fields.");
+      return;
+    }
+
+    const newTemplates = [...templates];
+    newTemplates[index] = { name: editName, message: editMessage };
+    setTemplates(newTemplates);
+    localStorage.setItem('templates', JSON.stringify(newTemplates));
+
+    if (selectedTemplate === index.toString()) {
+      setInputValues({});
+      setGeneratedOutput('');
+    }
+
+    setEditingIndex(null);
+    setEditName('');
+    setEditMessage('');
+  };
+
+  const deleteTemplate = (index: number) => {
+    const newTemplates = templates.filter((_, i) => i !== index);
+    setTemplates(newTemplates);
+    localStorage.setItem('templates', JSON.stringify(newTemplates));
+    if (selectedTemplate === index.toString()) {
+      setSelectedTemplate('');
+      setInputValues({});
+      setGeneratedOutput('');
+    }
+    if (editingIndex === index) {
+      cancelEditing();
+    }
+  };
+
+  const getInputFields = () => {
+    if (!selectedTemplate) return [];
+    const template = templates[Number(selectedTemplate)];
+    if (!template) return [];
+    const fieldMatches = template.message.match(/\[.*?\]/g) || [];
+    return [...new Set(fieldMatches.map(field => field.replace(/\[|\]/g, '')))];
+  };
+
+  const generateTemplate = () => {
+    if (!selectedTemplate) return;
+    const template = templates[Number(selectedTemplate)];
+    if (!template) return;
+
+    let output = template.message;
+    for (const [key, value] of Object.entries(inputValues)) {
+      const regex = new RegExp(`\\[${key}\\]`, 'g');
+      output = output.replace(regex, value || '');
+    }
+    setGeneratedOutput(output);
+  };
+
+  const copyToClipboard = async () => {
+    if (!generatedOutput) return;
+
+    try {
+      await navigator.clipboard.writeText(generatedOutput);
+      setIsCopied(true);
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = generatedOutput;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setIsCopied(true);
+        setTimeout(() => {
+          setIsCopied(false);
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+      document.body.removeChild(textArea);
+    }
+  };
+
+  return (
+    <div className="h-full bg-gray-100 p-6 flex items-center justify-center">
+      <div className="w-full max-w-6xl bg-white rounded-lg shadow-lg overflow-hidden flex flex-col md:flex-row">
+        <div className="w-full md:w-1/2 p-6 border-r border-gray-200 mr-4">
+          <h2 className="text-3xl font-semibold mb-6 text-gray-900">Template Generator</h2>
+
+          <TemplateForm
+            templateName={templateName}
+            templateMessage={templateMessage}
+            setTemplateName={setTemplateName}
+            setTemplateMessage={setTemplateMessage}
+            saveTemplate={saveTemplate}
+          />
+
+          <h3 className="text-2xl font-semibold mt-8 mb-4 text-gray-800">Saved Templates</h3>
+          <TemplateList
+            templates={templates}
+            editingIndex={editingIndex}
+            editName={editName}
+            editMessage={editMessage}
+            setEditName={setEditName}
+            setEditMessage={setEditMessage}
+            startEditing={startEditing}
+            saveEdit={saveEdit}
+            cancelEditing={cancelEditing}
+            deleteTemplate={deleteTemplate}
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+
+        <div className="w-full md:w-1/2 p-6">
+          <h3 className="text-2xl font-semibold mb-4 text-gray-800">Generate Template</h3>
+          <TemplateGenerator
+            templates={templates}
+            selectedTemplate={selectedTemplate}
+            setSelectedTemplate={setSelectedTemplate}
+            inputValues={inputValues}
+            setInputValues={setInputValues}
+            generatedOutput={generatedOutput}
+            generateTemplate={generateTemplate}
+            copyToClipboard={copyToClipboard}
+            isCopied={isCopied}
+            getInputFields={getInputFields}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </div>
+      </div>
     </div>
   );
+
 }
