@@ -16,7 +16,7 @@ export function SiteFooter() {
             </a>
             . The source code is available on{" "}
             <a
-              href="https://github.com/arnavsharma/template-generator"
+              href="https://github.com/arnavsharma/dynamic-template-generator"
               target="_blank"
               rel="noreferrer"
               className="font-medium text-blue-600 hover:underline underline-offset-4"
